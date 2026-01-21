@@ -10,21 +10,26 @@ from comics.exceptions import InvalidDateError
 import pytumblr
 
 
+TEMP_PATH = "/tmp/peanuts_today.png"
+
+
 def get_comic():
-    """Fetch today's Peanuts comic, falling back to yesterday if unavailable."""
+    """Fetch and download today's comic, falling back to yesterday if unavailable."""
     today = datetime.today()
     try:
         comic = comics.search("peanuts", today)
-        return comic, today
+        comic.download(TEMP_PATH)
+        return today
     except InvalidDateError:
-        print(f"Today's comic not available yet, trying yesterday...")
+        print("Today's comic not available yet, trying yesterday...")
         yesterday = today - timedelta(days=1)
         comic = comics.search("peanuts", yesterday)
-        return comic, yesterday
+        comic.download(TEMP_PATH)
+        return yesterday
 
 
-def post_to_tumblr(comic, date):
-    """Post comic to Tumblr blog."""
+def post_to_tumblr(date):
+    """Post downloaded comic to Tumblr blog."""
     client = pytumblr.TumblrRestClient(
         os.environ['TUMBLR_CONSUMER_KEY'],
         os.environ['TUMBLR_CONSUMER_SECRET'],
@@ -32,20 +37,15 @@ def post_to_tumblr(comic, date):
         os.environ['TUMBLR_OAUTH_SECRET'],
     )
 
-    # Format date for caption
     date_str = date.strftime("%B %d, %Y")
     caption = f"Peanuts - {date_str}"
-
-    # Download locally then upload (more reliable)
-    temp_path = "/tmp/peanuts_today.png"
-    comic.download(temp_path)
 
     response = client.create_photo(
         'daily-peanut',
         state="published",
         tags=["peanuts", "comic", "charles schulz", "snoopy", "charlie brown"],
         caption=caption,
-        data=temp_path
+        data=TEMP_PATH
     )
 
     return response
@@ -53,11 +53,11 @@ def post_to_tumblr(comic, date):
 
 def main():
     print("Fetching Peanuts comic...")
-    comic, date = get_comic()
+    date = get_comic()
     print(f"Got comic for {date.date()}")
 
     print("Posting to Tumblr...")
-    response = post_to_tumblr(comic, date)
+    response = post_to_tumblr(date)
 
     print(f"Done! Response: {response}")
 
