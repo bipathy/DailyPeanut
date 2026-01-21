@@ -5,6 +5,9 @@ on:
     - cron: '0 14 * * *'  # Daily at 7:00 AM MST (14:00 UTC)
   workflow_dispatch:  # Manual trigger option
 
+permissions:
+  contents: write
+
 jobs:
   post-comic:
     runs-on: ubuntu-latest
