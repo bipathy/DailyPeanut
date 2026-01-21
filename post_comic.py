@@ -44,7 +44,7 @@ def post_to_tumblr(date):
     response = client.create_photo(
         'daily-peanut',
         state="published",
-        tags=["peanuts", "comic", "charles schulz", "snoopy", "charlie brown"],
+        tags=["DailyPeanut", "peanuts", "comic", "charles schulz", "snoopy", "charlie brown"],
         caption=caption,
         data=TEMP_PATH
     )
