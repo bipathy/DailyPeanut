@@ -1,0 +1,2 @@
+comics>=0.9.0
+pytumblr>=0.1.0

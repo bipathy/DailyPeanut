@@ -1,0 +1,19 @@
+# Environment variables
+.env
+credentials.md
+
+# Planning documents (private)
+Planning/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+.venv/
+env/
+
+# Temporary files
+*.tmp
+.DS_Store

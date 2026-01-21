@@ -1,0 +1,1 @@
+DailyPeanut is an automation which publishes the Peanuts comic for the day to a Tumblr blog called DailyPeanut. 
