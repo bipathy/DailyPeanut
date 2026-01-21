@@ -11,6 +11,7 @@ import pytumblr
 
 
 TEMP_PATH = "/tmp/peanuts_today.png"
+LOG_FILE = os.path.join(os.path.dirname(__file__), "post_log.csv")
 
 
 def get_comic():
@@ -51,6 +52,21 @@ def post_to_tumblr(date):
     return response
 
 
+def log_post(date, post_id):
+    """Append post info to log file."""
+    post_url = f"https://daily-peanut.tumblr.com/post/{post_id}"
+
+    # Create header if file doesn't exist
+    if not os.path.exists(LOG_FILE):
+        with open(LOG_FILE, "w") as f:
+            f.write("date,post_url\n")
+
+    with open(LOG_FILE, "a") as f:
+        f.write(f"{date.date()},{post_url}\n")
+
+    return post_url
+
+
 def main():
     print("Fetching Peanuts comic...")
     date = get_comic()
@@ -59,7 +75,8 @@ def main():
     print("Posting to Tumblr...")
     response = post_to_tumblr(date)
 
-    print(f"Done! Response: {response}")
+    post_url = log_post(date, response['id'])
+    print(f"Done! Post URL: {post_url}")
 
 
 if __name__ == "__main__":
