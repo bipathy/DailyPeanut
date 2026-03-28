@@ -19,9 +19,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          playwright install
+        run: pip install -r requirements.txt
 
       - name: Post comic to Tumblr
         run: python post_comic.py

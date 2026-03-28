@@ -4,30 +4,40 @@ DailyPeanut - Post today's Peanuts comic to Tumblr
 """
 
 import os
-from datetime import datetime, timedelta
-import comics
-from comics.exceptions import InvalidDateError
+import re
+import requests
+from bs4 import BeautifulSoup
+from datetime import datetime
 import pytumblr
 
 
-TEMP_PATH = "/tmp/peanuts_today.png"
+TEMP_PATH = "/tmp/peanuts_today.gif"
 LOG_FILE = os.path.join(os.path.dirname(__file__), "post_log.csv")
 
 
 def get_comic():
-    """Fetch and download today's comic, falling back up to 7 days if unavailable."""
-    today = datetime.today()
-    for days_back in range(8):
-        date = today - timedelta(days=days_back)
-        try:
-            comic = comics.search("peanuts", date)
-            comic.download(TEMP_PATH)
-            if days_back > 0:
-                print(f"Today's comic unavailable, using {date.date()} instead.")
-            return date
-        except InvalidDateError:
-            print(f"Comic not available for {date.date()}, trying earlier...")
-    raise RuntimeError("Could not find a Peanuts comic in the last 7 days.")
+    """Fetch and download today's Peanuts comic from ArcaMax."""
+    response = requests.get(
+        "https://www.arcamax.com/thefunnies/peanuts/",
+        headers={"User-Agent": "Mozilla/5.0"},
+        timeout=30,
+    )
+    response.raise_for_status()
+
+    soup = BeautifulSoup(response.text, "html.parser")
+    img = soup.find("img", src=re.compile(r"resources\.arcamax\.com/newspics/"))
+    if not img:
+        raise RuntimeError("Could not find Peanuts comic image on ArcaMax")
+
+    date_match = re.search(r"(\d+/\d+/\d{4})", img.get("alt", ""))
+    date = datetime.strptime(date_match.group(1), "%m/%d/%Y") if date_match else datetime.today()
+
+    img_response = requests.get(img["src"], timeout=30)
+    img_response.raise_for_status()
+    with open(TEMP_PATH, "wb") as f:
+        f.write(img_response.content)
+
+    return date
 
 
 def post_to_tumblr(date):
