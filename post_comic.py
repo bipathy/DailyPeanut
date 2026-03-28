@@ -15,18 +15,19 @@ LOG_FILE = os.path.join(os.path.dirname(__file__), "post_log.csv")
 
 
 def get_comic():
-    """Fetch and download today's comic, falling back to yesterday if unavailable."""
+    """Fetch and download today's comic, falling back up to 7 days if unavailable."""
     today = datetime.today()
-    try:
-        comic = comics.search("peanuts", today)
-        comic.download(TEMP_PATH)
-        return today
-    except InvalidDateError:
-        print("Today's comic not available yet, trying yesterday...")
-        yesterday = today - timedelta(days=1)
-        comic = comics.search("peanuts", yesterday)
-        comic.download(TEMP_PATH)
-        return yesterday
+    for days_back in range(8):
+        date = today - timedelta(days=days_back)
+        try:
+            comic = comics.search("peanuts", date)
+            comic.download(TEMP_PATH)
+            if days_back > 0:
+                print(f"Today's comic unavailable, using {date.date()} instead.")
+            return date
+        except InvalidDateError:
+            print(f"Comic not available for {date.date()}, trying earlier...")
+    raise RuntimeError("Could not find a Peanuts comic in the last 7 days.")
 
 
 def post_to_tumblr(date):
